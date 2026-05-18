@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CozyStay - Room Rentals</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #FDF8F3;
+  --primary: #C96A3A;
+  --secondary: #F2E8DC;
+  --text: #3B2F2F;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Lato', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* NAVBAR */
+nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 40px;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  color: var(--primary);
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.nav-links a.active {
+  color: var(--primary);
+}
+
+.hamburger {
+  display: none;
+  cursor: pointer;
+}
+
+/* SECTIONS */
+.section {
+  display: none;
+  padding: 40px;
+}
+
+.section.active {
+  display: block;
+}
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 42px;
+}
+
+.search-bar {
+  margin-top: 20px;
+}
+
+.search-bar input {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* CARDS */
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+.cards-3 {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.cards-4 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+/* IMAGE PLACEHOLDER */
+.img-placeholder {
+  height: 150px;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+/* FILTER */
+.sidebar {
+  width: 250px;
+}
+
+.flex {
+  display: flex;
+  gap: 20px;
+}
+
+/* FORM */
+input, textarea, select {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+/* FOOTER STRIP */
+.newsletter {
+  background: var(--secondary);
+  padding: 20px;
+  text-align: center;
+}
+
+/* MOBILE */
+@media(max-width: 768px) {
+  .flex {
+    flex-direction: column;
+  }
+
+  .nav-links {
+    display: none;
+    flex-direction: column;
+  }
+
+  .nav-links.show {
+    display: flex;
+  }
+
+  .hamburger {
+    display: block;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <div class="logo">CozyStay</div>
+  <div class="hamburger" onclick="toggleMenu()">☰</div>
+  <div class="nav-links" id="navLinks">
+    <a href="#" onclick="showPage('home')" class="active">Home</a>
+    <a href="#" onclick="showPage('listings')">Listings</a>
+    <a href="#" onclick="showPage('details')">Room</a>
+    <a href="#" onclick="showPage('contact')">Contact</a>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="section active">
+
+<div class="hero">
+  <h1>Find Your Perfect Cozy Stay</h1>
+  <p>Short-term, long-term, or student housing — all in one place</p>
+
+  <div class="search-bar">
+    <input placeholder="Location">
+    <input placeholder="Check-in">
+    <input placeholder="Check-out">
+    <input placeholder="Guests">
+    <button class="btn">Search</button>
+  </div>
+</div>
+
+<h2>How it works</h2>
+<div class="grid cards-3">
+  <div class="card">Search</div>
+  <div class="card">Book</div>
+  <div class="card">Stay</div>
+</div>
+
+<h2>Featured Listings</h2>
+<div class="grid cards-3">
+  <div class="card">
+    <div class="img-placeholder">📷 Image</div>
+    <h3>Cozy Apartment</h3>
+    <p>₹1500/night</p>
+  </div>
+  <div class="card">
+    <div class="img-placeholder">📷 Image</div>
+    <h3>Luxury Room</h3>
+    <p>₹2500/night</p>
+  </div>
+  <div class="card">
+    <div class="img-placeholder">📷 Image</div>
+    <h3>PG Stay</h3>
+    <p>₹8000/month</p>
+  </div>
+</div>
+
+<h2>Testimonials</h2>
+<div class="grid cards-3">
+  <div class="card">⭐️⭐️⭐️⭐️⭐️<br>Great stay!</div>
+  <div class="card">⭐️⭐️⭐️⭐️<br>Very comfortable</div>
+  <div class="card">⭐️⭐️⭐️⭐️⭐️<br>Loved it!</div>
+</div>
+
+<div class="newsletter">
+  <h3>Subscribe for updates</h3>
+  <input placeholder="Email">
+  <button class="btn">Subscribe</button>
+</div>
+
+</div>
+
+<!-- LISTINGS -->
+<div id="listings" class="section">
+
+<div class="flex">
+
+<div class="sidebar">
+  <h3>Filters</h3>
+  <label><input type="checkbox"> WiFi</label><br>
+  <label><input type="checkbox"> AC</label><br>
+  <label><input type="checkbox"> Parking</label><br>
+</div>
+
+<div style="flex:1;">
+  <h2>Listings</h2>
+
+  <select>
+    <option>Sort by Price</option>
+    <option>Rating</option>
+  </select>
+
+  <div class="grid cards-4">
+    <div class="card">
+      <div class="img-placeholder">📷</div>
+      <h4>Room 1</h4>
+      <p>₹1200</p>
+      <button class="btn" onclick="showPage('details')">View</button>
+    </div>
+    <div class="card">
+      <div class="img-placeholder">📷</div>
+      <h4>Room 2</h4>
+      <p>₹1500</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+</div>
+
+<!-- DETAILS -->
+<div id="details" class="section">
+
+<h2>Room Details</h2>
+
+<div class="img-placeholder" style="height:250px;">📷 Main Image</div>
+
+<div class="grid cards-4" style="margin-top:10px;">
+  <div class="img-placeholder">📷</div>
+  <div class="img-placeholder">📷</div>
+  <div class="img-placeholder">📷</div>
+  <div class="img-placeholder">📷</div>
+</div>
+
+<h3>Luxury Apartment</h3>
+<p>Location: Indore | ⭐ 4.5</p>
+
+<p>This is a beautiful cozy apartment perfect for your stay.</p>
+
+<h3>Amenities</h3>
+<ul>
+  <li>WiFi</li>
+  <li>AC</li>
+  <li>Laundry</li>
+</ul>
+
+<h3>Price: ₹2000/night</h3>
+<button class="btn">Book Now</button>
+
+<h3>Reviews</h3>
+<div class="card">⭐️⭐️⭐️⭐️⭐️ Amazing!</div>
+
+</div>
+
+<!-- CONTACT -->
+<div id="contact" class="section">
+
+<h2>Contact Us</h2>
+
+<form onsubmit="submitForm(event)">
+  <input placeholder="Name" required>
+  <input placeholder="Email" required>
+  <input placeholder="Phone">
+  <select>
+    <option>Rental Type</option>
+    <option>Short-term</option>
+    <option>Long-term</option>
+  </select>
+  <textarea placeholder="Message"></textarea>
+  <button class="btn">Submit</button>
+</form>
+
+<p id="successMsg" style="color:green; display:none;">Message Sent Successfully!</p>
+
+<div class="card">
+  <p>Address: Your Address</p>
+  <p>Email: info@cozystay.com</p>
+</div>
+
+<div class="img-placeholder" style="height:200px;">📍 Map</div>
+
+</div>
+
+<script>
+function showPage(pageId) {
+  document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function toggleMenu() {
+  document.getElementById('navLinks').classList.toggle('show');
+}
+
+function submitForm(e) {
+  e.preventDefault();
+  document.getElementById('successMsg').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
