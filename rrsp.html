@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NestIQ — Find Where You Truly Belong</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --obsidian: #0A0A0F;
+  --obsidian-2: #0F0F18;
+  --obsidian-3: #14141F;
+  --obsidian-4: #1A1A28;
+  --amber: #D4A853;
+  --amber-light: #E8C070;
+  --amber-dark: #B8922E;
+  --amber-glow: rgba(212, 168, 83, 0.15);
+  --amber-glow-strong: rgba(212, 168, 83, 0.3);
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(212,168,83,0.18);
+  --text-primary: #F5F0E8;
+  --text-secondary: rgba(245,240,232,0.6);
+  --text-muted: rgba(245,240,232,0.35);
+  --white: #FFFFFF;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--obsidian);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── CUSTOM CURSOR ── */
+#cursor {
+  width: 10px; height: 10px;
+  background: var(--amber);
+  border-radius: 50%;
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 99999;
+  transition: transform 0.15s ease, width 0.3s, height 0.3s, background 0.3s;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+}
+#cursor.big { width: 40px; height: 40px; background: var(--amber-glow-strong); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--obsidian); }
+::-webkit-scrollbar-thumb { background: var(--amber-dark); border-radius: 2px; }
+
+/* ── NOISE TEXTURE ── */
+.noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.35;
+}
+
+/* ── GLASS CARD ── */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes pulse-amber {
+  0%, 100% { box-shadow: 0 0 0 0 var(--amber-glow-strong); }
+  50% { box-shadow: 0 0 0 14px transparent; }
+}
+@keyframes bounce-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+@keyframes dot-pulse {
+  0%, 60%, 100% { transform: scale(1); opacity: 0.4; }
+  30% { transform: scale(1.4); opacity: 1; }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); } to { transform: rotate(360deg); }
+}
+@keyframes skeleton-shine {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes glow-border {
+  0%, 100% { border-color: rgba(212,168,83,0.2); }
+  50% { border-color: rgba(212,168,83,0.6); }
+}
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* scroll observer */
+.reveal {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ── NAVBAR ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 20px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.5s ease, padding 0.4s ease, backdrop-filter 0.5s;
+  animation: fadeIn 1s ease 0.2s both;
+}
+nav.scrolled {
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 14px 48px;
+  border-bottom: 1px solid rgba(212,168,83,0.12);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.nav-logo-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  list-style: none;
+}
+.nav-links a {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  transition: color 0.3s;
+  position: relative;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 0; height: 1px;
+  background: var(--amber);
+  transition: width 0.3s;
+}
+.nav-links a:hover { color: var(--text-primary); }
+.nav-links a:hover::after { width: 100%; }
+.nav-cta {
+  background: linear-gradient(135deg, var(--amber) 0%, var(--amber-dark) 100%);
+  color: var(--obsidian);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 12px 28px;
+  border-radius: 50px;
+  border: none;
+  cursor: none;
+  letter-spacing: 0.2px;
+  transition: var(--transition);
+  background-size: 200% auto;
+  position: relative;
+  overflow: hidden;
+}
+.nav-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.nav-cta:hover::before { opacity: 1; }
+.nav-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(212,168,83,0.35); }
+
+/* ── HERO ── */
+#hero {
+  position: relative;
+  height: 100vh;
+  min-height: 700px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=1800&q=90');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  transform: scale(1.05);
+  transition: transform 0.1s linear;
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    rgba(10,10,15,0.92) 0%,
+    rgba(10,10,15,0.7) 50%,
+    rgba(10,10,15,0.3) 100%
+  );
+}
+.hero-noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  z-index: 2;
+  pointer-events: none;
+}
+.hero-content {
+  position: relative;
+  z-index: 3;
+  max-width: 900px;
+  padding: 0 48px;
+  padding-top: 100px;
+}
+.hero-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 32px;
+  animation: fadeUp 1s ease 0.4s both;
+}
+.hero-h1-line1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(64px, 9vw, 120px);
+  line-height: 0.95;
+  color: var(--text-primary);
+  display: block;
+  animation: fadeUp 1s ease 0.5s both;
+}
+.hero-h1-line2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: clamp(64px, 9vw, 120px);
+  line-height: 0.95;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--text-primary);
+  display: block;
+  letter-spacing: -2px;
+  animation: fadeUp 1s ease 0.65s both;
+}
+.hero-sub {
+  font-size: 18px;
+  color: var(--text-secondary);
+  margin: 28px 0 40px;
+  font-weight: 300;
+  max-width: 440px;
+  line-height: 1.6;
+  animation: fadeUp 1s ease 0.8s both;
+}
+.hero-btns {
+  display: flex;
+  gap: 16px;
+  animation: fadeUp 1s ease 0.95s both;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+  color: var(--obsidian);
+  font-family: 'DM Sans';
+  font-weight: 500;
+  font-size: 15px;
+  padding: 16px 32px;
+  border-radius: 50px;
+  border: none;
+  cursor: none;
+  transition: var(--transition);
+  letter-spacing: 0.2px;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(212,168,83,0.4); }
+.btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+  font-family: 'DM Sans';
+  font-weight: 400;
+  font-size: 15px;
+  padding: 16px 32px;
+  border-radius: 50px;
+  border: 1px solid rgba(245,240,232,0.2);
+  cursor: none;
+  transition: var(--transition);
+}
+.btn-ghost:hover { border-color: var(--amber); color: var(--amber); transform: translateY(-2px); }
+
+.hero-stats {
+  position: absolute;
+  bottom: 80px;
+  right: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 3;
+  animation: fadeUp 1s ease 1.1s both;
+}
+.stat-badge {
+  background: rgba(10,10,15,0.7);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.stat-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+}
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  animation: fadeIn 1s ease 1.5s both;
+}
+.chevron-bounce {
+  animation: bounce-y 2s ease-in-out infinite;
+}
+
+/* ── SEARCH SECTION ── */
+#search {
+  position: relative;
+  z-index: 10;
+  padding: 0 48px;
+  margin-top: -40px;
+}
+.search-card {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: var(--obsidian-3);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+  animation: glow-border 4s ease-in-out infinite;
+}
+.search-inputs {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr 2fr auto;
+  gap: 0;
+  background: var(--obsidian-4);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.search-field {
+  padding: 18px 24px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+}
+.search-field:last-of-type { border-right: none; }
+.search-field label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.search-field input, .search-field select {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: 'DM Sans';
+  font-size: 15px;
+  font-weight: 400;
+  width: 100%;
+  cursor: none;
+}
+.search-field select option { background: var(--obsidian-3); }
+.search-field input::placeholder { color: var(--text-muted); }
+.search-btn {
+  background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+  color: var(--obsidian);
+  font-family: 'DM Sans';
+  font-weight: 500;
+  font-size: 14px;
+  padding: 0 28px;
+  border: none;
+  cursor: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: var(--transition);
+  letter-spacing: 0.2px;
+}
+.search-btn:hover { background: linear-gradient(135deg, var(--amber-light), var(--amber)); }
+
+.search-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+.chip {
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 8px 18px;
+  border-radius: 50px;
+  cursor: none;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.chip:hover, .chip.active {
+  background: var(--amber-glow);
+  border-color: var(--glass-border);
+  color: var(--amber);
+  transform: translateY(-1px);
+}
+
+/* ── LISTINGS ── */
+#listings {
+  padding: 80px 48px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 48px;
+}
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 600;
+  line-height: 1.05;
+  font-style: italic;
+  color: var(--text-primary);
+}
+.section-sub {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 280px;
+  text-align: right;
+  line-height: 1.6;
+}
+
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 280px;
+  gap: 16px;
+}
+.listing-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: none;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.4s ease;
+}
+.listing-card:nth-child(1) { grid-row: span 2; }
+.listing-card:nth-child(4) { grid-row: span 2; }
+
+.listing-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+.listing-card:hover .listing-img { transform: scale(1.06); }
+.listing-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px var(--glass-border);
+}
+
+.listing-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.3) 50%, transparent 100%);
+  transition: opacity 0.4s;
+}
+.listing-price {
+  position: absolute;
+  top: 16px; right: 16px;
+  background: rgba(10,10,15,0.85);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--amber);
+}
+.listing-info {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 20px;
+  transform: translateY(0);
+  transition: transform 0.4s ease;
+}
+.listing-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.listing-loc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.listing-stars { display: flex; gap: 2px; margin-bottom: 8px; }
+.listing-stars svg { width: 12px; height: 12px; }
+.listing-match {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--amber-glow);
+  border: 1px solid var(--glass-border);
+  color: var(--amber);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 50px;
+  margin-bottom: 10px;
+}
+.listing-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.listing-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.05);
+  padding: 4px 10px;
+  border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.listing-cta {
+  position: absolute;
+  bottom: 20px; right: 20px;
+  background: var(--amber);
+  color: var(--obsidian);
+  font-family: 'DM Sans';
+  font-weight: 500;
+  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 50px;
+  border: none;
+  cursor: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+.listing-card:hover .listing-cta { opacity: 1; transform: translateY(0); }
+
+/* skeleton */
+.skeleton-card {
+  background: var(--obsidian-3);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+}
+.skeleton-shimmer {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--obsidian-3) 0%, var(--obsidian-4) 50%, var(--obsidian-3) 100%);
+  background-size: 400px 100%;
+  animation: skeleton-shine 1.5s ease-in-out infinite;
+}
+
+.load-more-wrap { text-align: center; margin-top: 40px; }
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  font-family: 'DM Sans';
+  font-size: 14px;
+  padding: 14px 40px;
+  border-radius: 50px;
+  cursor: none;
+  transition: var(--transition);
+  animation: glow-border 3s ease-in-out infinite;
+}
+.btn-outline:hover { border-color: var(--amber); color: var(--amber); transform: translateY(-2px); }
+
+/* ── HOW IT WORKS ── */
+#how {
+  padding: 100px 48px;
+  text-align: center;
+  background: var(--obsidian-2);
+}
+.how-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(48px, 6vw, 80px);
+  font-weight: 600;
+  font-style: italic;
+  margin-bottom: 16px;
+}
+.how-sub {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin-bottom: 64px;
+  font-weight: 300;
+}
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.step-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  padding: 48px 36px;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+}
+.step-card:hover { border-color: var(--amber); transform: translateY(-4px); box-shadow: 0 24px 60px rgba(0,0,0,0.4); }
+.step-number {
+  position: absolute;
+  top: -20px; right: 20px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 120px;
+  font-weight: 700;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(212,168,83,0.15);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.step-icon {
+  width: 48px; height: 48px;
+  background: var(--amber-glow);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.step-h { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 600; margin-bottom: 12px; font-style: italic; }
+.step-p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; font-weight: 300; }
+
+/* ── TESTIMONIALS ── */
+#testimonials {
+  padding: 100px 0;
+  overflow: hidden;
+}
+.testimonials-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 600;
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 56px;
+  padding: 0 48px;
+}
+.testimonials-track-wrap {
+  overflow: hidden;
+  position: relative;
+}
+.testimonials-track {
+  display: flex;
+  gap: 24px;
+  padding: 20px 48px;
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.testimonial-card {
+  min-width: 360px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+.testimonial-card:hover { border-color: var(--amber); transform: translateY(-4px); }
+.testimonial-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.testimonial-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--glass-border);
+}
+.testimonial-name { font-weight: 500; font-size: 15px; }
+.testimonial-city { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.testimonial-stars { display: flex; gap: 2px; margin-bottom: 12px; }
+.testimonial-stars svg { width: 14px; height: 14px; }
+.testimonial-quote {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  font-weight: 300;
+  font-style: italic;
+  margin-bottom: 16px;
+}
+.testimonial-match {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--amber);
+  background: var(--amber-glow);
+  border: 1px solid var(--glass-border);
+  padding: 5px 12px;
+  border-radius: 50px;
+}
+.testimonials-nav {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+.testimonials-nav button {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  cursor: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.testimonials-nav button:hover { background: var(--amber-glow); border-color: var(--amber); color: var(--amber); }
+
+/* ── STATS BANNER ── */
+#stats {
+  padding: 80px 48px;
+  background: linear-gradient(135deg, rgba(212,168,83,0.12) 0%, rgba(10,10,15,0) 60%);
+  border-top: 1px solid rgba(212,168,83,0.12);
+  border-bottom: 1px solid rgba(212,168,83,0.12);
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: center;
+}
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(48px, 6vw, 72px);
+  font-weight: 700;
+  color: var(--amber);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+/* ── AI CHAT ── */
+#chat-orb {
+  position: fixed;
+  bottom: 32px; right: 32px;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+.chat-float-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+  color: var(--obsidian);
+  font-family: 'DM Sans';
+  font-weight: 500;
+  font-size: 14px;
+  padding: 14px 24px;
+  border-radius: 50px;
+  border: none;
+  cursor: none;
+  box-shadow: 0 8px 32px rgba(212,168,83,0.4);
+  animation: pulse-amber 2.5s ease-in-out infinite;
+  transition: var(--transition);
+}
+.chat-float-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(212,168,83,0.5); }
+.chat-orb-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--obsidian);
+  opacity: 0.6;
+}
+
+.chat-panel {
+  position: fixed;
+  bottom: 100px; right: 32px;
+  width: 380px;
+  height: 560px;
+  background: var(--obsidian-3);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  z-index: 899;
+  transform: translateY(20px) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease;
+}
+.chat-panel.open { transform: translateY(0) scale(1); opacity: 1; pointer-events: all; }
+
+.chat-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(135deg, rgba(212,168,83,0.1), transparent);
+}
+.chat-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.chat-title-wrap { display: flex; align-items: center; gap: 12px; }
+.chat-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.chat-title { font-size: 15px; font-weight: 500; }
+.chat-subtitle { font-size: 11px; color: var(--amber); margin-top: 2px; }
+.chat-close {
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  cursor: none;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.chat-close:hover { color: var(--text-primary); border-color: rgba(255,255,255,0.2); }
+
+.chat-thinking {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  padding: 8px 0 0;
+}
+.thinking-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--amber);
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chat-messages::-webkit-scrollbar { width: 2px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--amber-dark); }
+
+.msg-wrap { display: flex; gap: 8px; }
+.msg-wrap.user { flex-direction: row-reverse; }
+.msg-avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--amber), var(--amber-dark)); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.msg-bubble {
+  max-width: 75%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  font-weight: 300;
+}
+.msg-bubble.ai { background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-primary); border-bottom-left-radius: 4px; }
+.msg-bubble.user { background: linear-gradient(135deg, var(--amber), var(--amber-dark)); color: var(--obsidian); border-bottom-right-radius: 4px; font-weight: 400; }
+.typing-indicator { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+.typing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); animation: dot-pulse 1.4s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.chat-chips {
+  padding: 0 16px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chat-chip {
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 50px;
+  cursor: none;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.chat-chip:hover { background: var(--amber-glow); border-color: var(--glass-border); color: var(--amber); }
+
+.chat-input-wrap {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  gap: 10px;
+}
+.chat-input {
+  flex: 1;
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 50px;
+  color: var(--text-primary);
+  font-family: 'DM Sans';
+  font-size: 13.5px;
+  padding: 10px 18px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.chat-input:focus { border-color: rgba(212,168,83,0.4); }
+.chat-input::placeholder { color: var(--text-muted); }
+.chat-send {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+  border: none;
+  border-radius: 50%;
+  cursor: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.chat-send:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(212,168,83,0.4); }
+
+/* ── MODAL ── */
+#modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,10,15,0.92);
+  backdrop-filter: blur(20px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+#modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--obsidian-3);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  transform: scale(0.94);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+#modal-overlay.open .modal-box { transform: scale(1); }
+.modal-gallery {
+  position: relative;
+  background: #000;
+}
+.modal-main-img {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.4s;
+}
+.modal-thumbs {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: var(--obsidian-4);
+}
+.modal-thumb {
+  width: 72px; height: 54px;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: none;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+.modal-thumb.active { opacity: 1; border-color: var(--amber); }
+.modal-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 36px; height: 36px;
+  background: rgba(10,10,15,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  color: var(--text-primary);
+  font-size: 18px;
+  cursor: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  transition: var(--transition);
+}
+.modal-close:hover { background: rgba(212,168,83,0.2); border-color: var(--amber); }
+.modal-info {
+  padding: 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.modal-info::-webkit-scrollbar { width: 2px; }
+.modal-info::-webkit-scrollbar-thumb { background: var(--amber-dark); }
+.modal-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.2;
+}
+.modal-addr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+.modal-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-price {
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--amber);
+  font-family: 'Cormorant Garamond', serif;
+}
+.modal-avail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(72, 199, 116, 0.1);
+  border: 1px solid rgba(72, 199, 116, 0.3);
+  color: #48c774;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 50px;
+}
+.modal-avail::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #48c774; }
+.amenities-title { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); font-weight: 500; }
+.amenities-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.amenity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 10px 12px;
+  border-radius: var(--radius);
+}
+.amenity svg { color: var(--amber); flex-shrink: 0; }
+.landlord-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.landlord-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--glass-border); }
+.landlord-name { font-size: 14px; font-weight: 500; }
+.landlord-status { font-size: 12px; color: var(--text-muted); }
+.ai-summary {
+  background: linear-gradient(135deg, rgba(212,168,83,0.08), transparent);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.ai-summary-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.ai-summary-text { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; font-style: italic; font-family: 'Cormorant Garamond', serif; font-size: 16px; }
+.modal-btns { display: flex; gap: 12px; }
+.btn-modal-primary {
+  flex: 1;
+  background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+  color: var(--obsidian);
+  font-family: 'DM Sans';
+  font-weight: 500;
+  font-size: 14px;
+  padding: 14px;
+  border: none;
+  border-radius: 50px;
+  cursor: none;
+  transition: var(--transition);
+  text-align: center;
+}
+.btn-modal-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(212,168,83,0.4); }
+.btn-modal-ghost {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  font-family: 'DM Sans';
+  font-weight: 400;
+  font-size: 14px;
+  padding: 14px;
+  border-radius: 50px;
+  cursor: none;
+  transition: var(--transition);
+  text-align: center;
+}
+.btn-modal-ghost:hover { border-color: var(--amber); color: var(--amber); }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--obsidian-2);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 80px 48px 40px;
+}
+.footer-top {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(4, 1fr);
+  gap: 48px;
+  margin-bottom: 64px;
+}
+.footer-brand-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 32px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+.footer-tagline { font-size: 13px; color: var(--text-muted); line-height: 1.7; max-width: 220px; margin-bottom: 24px; }
+.footer-social { display: flex; gap: 12px; }
+.social-btn {
+  width: 36px; height: 36px;
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: none;
+  transition: var(--transition);
+}
+.social-btn:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-glow); }
+.footer-col-title { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); font-weight: 500; margin-bottom: 20px; }
+.footer-links { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.footer-links a { font-size: 13.5px; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
+.footer-links a:hover { color: var(--text-primary); }
+.footer-newsletter {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 48px;
+}
+.newsletter-text { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-style: italic; }
+.newsletter-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.newsletter-form { display: flex; gap: 12px; flex: 1; max-width: 400px; }
+.newsletter-input {
+  flex: 1;
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 50px;
+  padding: 12px 20px;
+  color: var(--text-primary);
+  font-family: 'DM Sans';
+  font-size: 14px;
+  outline: none;
+}
+.newsletter-input::placeholder { color: var(--text-muted); }
+.newsletter-input:focus { border-color: rgba(212,168,83,0.4); }
+.newsletter-btn {
+  background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+  color: var(--obsidian);
+  font-family: 'DM Sans';
+  font-weight: 500;
+  font-size: 14px;
+  padding: 12px 24px;
+  border-radius: 50px;
+  border: none;
+  cursor: none;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+.newsletter-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(212,168,83,0.35); }
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.footer-copy { font-size: 13px; color: var(--text-muted); }
+.footer-ai-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  padding: 6px 14px;
+  border-radius: 50px;
+}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  nav { padding: 16px 20px; }
+  nav.scrolled { padding: 12px 20px; }
+  .nav-links { display: none; }
+  .hero-content { padding: 0 20px; padding-top: 80px; }
+  .hero-stats { right: 20px; bottom: 100px; }
+  .stat-badge { font-size: 11px; padding: 8px 14px; }
+  #search { padding: 0 20px; }
+  .search-inputs { grid-template-columns: 1fr 1fr; }
+  .search-field:nth-child(3), .search-field:nth-child(4) { grid-column: span 1; }
+  .search-btn { grid-column: span 2; justify-content: center; padding: 16px; }
+  #listings { padding: 60px 20px; }
+  .listings-grid { grid-template-columns: 1fr; grid-auto-rows: 260px; }
+  .listing-card:nth-child(1), .listing-card:nth-child(4) { grid-row: span 1; }
+  .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .section-sub { text-align: left; }
+  #how { padding: 60px 20px; }
+  .steps-grid { grid-template-columns: 1fr; gap: 16px; }
+  #testimonials { padding: 60px 0; }
+  .testimonials-title { padding: 0 20px; }
+  .testimonial-card { min-width: 300px; }
+  #stats { padding: 60px 20px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+  .chat-panel { width: calc(100vw - 32px); right: 16px; bottom: 90px; }
+  footer { padding: 60px 20px 32px; }
+  .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .footer-newsletter { flex-direction: column; }
+  .newsletter-form { width: 100%; max-width: 100%; }
+  .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+  .modal-box { grid-template-columns: 1fr; max-height: 90vh; overflow-y: auto; }
+  .modal-main-img { height: 260px; }
+  .amenities-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+
+<!-- ══ NAVBAR ══ -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <polygon points="11,1 13.5,8 21,8 15,13 17.5,20 11,16 4.5,20 7,13 1,8 8.5,8" fill="#D4A853"/>
+    </svg>
+    <span class="nav-logo-text">NestIQ</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#listings">Explore</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#stats">Pricing</a></li>
+    <li><a href="#chat-orb">AI Concierge</a></li>
+  </ul>
+  <button class="nav-cta">Find My Room</button>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section id="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-noise"></div>
+  <div class="hero-content">
+    <span class="hero-label">
+      <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#D4A853"/></svg>
+      AI-Powered Room Matching
+    </span>
+    <span class="hero-h1-line1">Find Where You</span>
+    <span class="hero-h1-line2">TRULY BELONG</span>
+    <p class="hero-sub">AI-matched rooms for the way you actually live.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="document.getElementById('listings').scrollIntoView({behavior:'smooth'})">Browse Rooms →</button>
+      <button class="btn-ghost" onclick="openChat()">Talk to AI Agent ✦</button>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-badge">
+      <div class="stat-badge-dot"></div>
+      <span>2,400+ Verified Rooms</span>
+    </div>
+    <div class="stat-badge">
+      <div class="stat-badge-dot"></div>
+      <span>98% Match Rate</span>
+    </div>
+    <div class="stat-badge">
+      <div class="stat-badge-dot"></div>
+      <span>Instant AI Booking</span>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <span>Scroll</span>
+    <div class="chevron-bounce">
+      <svg width="16" height="10" viewBox="0 0 16 10" fill="none">
+        <path d="M1 1L8 8L15 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SEARCH BAR ══ -->
+<section id="search">
+  <div class="search-card reveal">
+    <div class="search-inputs">
+      <div class="search-field">
+        <label>Location</label>
+        <input type="text" placeholder="Mumbai, Bandra...">
+      </div>
+      <div class="search-field">
+        <label>Budget / month</label>
+        <input type="text" placeholder="₹8,000 – ₹20,000">
+      </div>
+      <div class="search-field">
+        <label>Move-in Date</label>
+        <input type="date">
+      </div>
+      <div class="search-field">
+        <label>Lifestyle</label>
+        <select>
+          <option value="">Select lifestyle...</option>
+          <option>Student</option>
+          <option>Remote Worker</option>
+          <option>Young Professional</option>
+          <option>Couple</option>
+          <option>Pet Owner</option>
+          <option>Artist</option>
+          <option>Senior</option>
+        </select>
+      </div>
+      <button class="search-btn" onclick="runSearch(this)">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M10 10L13 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Search with AI
+      </button>
+    </div>
+    <div class="search-chips">
+      <span class="chip" onclick="this.classList.toggle('active')">📍 Near metro</span>
+      <span class="chip" onclick="this.classList.toggle('active')">🐾 Pet-friendly</span>
+      <span class="chip" onclick="this.classList.toggle('active')">💻 Has desk</span>
+      <span class="chip" onclick="this.classList.toggle('active')">🔇 Quiet zone</span>
+      <span class="chip" onclick="this.classList.toggle('active')">🌇 Rooftop access</span>
+      <span class="chip" onclick="this.classList.toggle('active')">💡 All-inclusive rent</span>
+      <span class="chip" onclick="this.classList.toggle('active')">🌸 Female-only</span>
+      <span class="chip" onclick="this.classList.toggle('active')">🏘️ Co-living</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ LISTINGS ══ -->
+<section id="listings">
+  <div class="section-header reveal">
+    <div>
+      <div class="section-title">Featured<br><em>Spaces</em></div>
+    </div>
+    <p class="section-sub">AI-curated picks based on thousands of verified stays across India's top cities.</p>
+  </div>
+  <div class="listings-grid" id="listingsGrid">
+    <!-- Populated by JS -->
+  </div>
+  <div class="load-more-wrap reveal">
+    <button class="btn-outline">Load More Rooms</button>
+  </div>
+</section>
+
+<!-- ══ HOW IT WORKS ══ -->
+<section id="how">
+  <h2 class="how-title reveal">Renting, Reimagined</h2>
+  <p class="how-sub reveal reveal-delay-1">Three steps to your perfect room. No brokerage. No guesswork.</p>
+  <div class="steps-grid">
+    <div class="step-card reveal reveal-delay-1">
+      <div class="step-number">1</div>
+      <div class="step-icon">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#D4A853" stroke-width="1.5">
+          <circle cx="11" cy="11" r="3"/><circle cx="11" cy="4" r="1.5"/><circle cx="18" cy="7.5" r="1.5"/>
+          <circle cx="18" cy="14.5" r="1.5"/><circle cx="11" cy="18" r="1.5"/><circle cx="4" cy="14.5" r="1.5"/>
+          <circle cx="4" cy="7.5" r="1.5"/><line x1="11" y1="8" x2="11" y2="5.5"/><line x1="13.5" y1="9.5" x2="16.5" y2="8"/>
+          <line x1="13.5" y1="12.5" x2="16.5" y2="14"/><line x1="11" y1="14" x2="11" y2="16.5"/>
+          <line x1="8.5" y1="12.5" x2="5.5" y2="14"/><line x1="8.5" y1="9.5" x2="5.5" y2="8"/>
+        </svg>
+      </div>
+      <h3 class="step-h">Tell the AI your lifestyle</h3>
+      <p class="step-p">Share your daily rhythm — work schedule, preferences, non-negotiables. Our AI learns what home means to you.</p>
+    </div>
+    <div class="step-card reveal reveal-delay-2">
+      <div class="step-number">2</div>
+      <div class="step-icon">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#D4A853" stroke-width="1.5">
+          <circle cx="11" cy="11" r="9"/><circle cx="11" cy="11" r="5"/><circle cx="11" cy="11" r="1.5" fill="#D4A853"/>
+        </svg>
+      </div>
+      <h3 class="step-h">Get hyper-matched listings</h3>
+      <p class="step-p">Receive a curated shortlist of rooms scored for you — not the masses. Every result comes with an AI compatibility score.</p>
+    </div>
+    <div class="step-card reveal reveal-delay-3">
+      <div class="step-number">3</div>
+      <div class="step-icon">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#D4A853" stroke-width="1.5">
+          <path d="M3 12L11 4L19 12V20H14V15H8V20H3V12Z"/>
+          <circle cx="11" cy="9" r="1.5"/>
+        </svg>
+      </div>
+      <h3 class="step-h">Book instantly, move freely</h3>
+      <p class="step-p">No brokerage fees. Direct landlord connections. Verified rooms only. Schedule a visit or book on the spot — it's that simple.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TESTIMONIALS ══ -->
+<section id="testimonials">
+  <h2 class="testimonials-title reveal">What Tenants Say</h2>
+  <div class="testimonials-track-wrap">
+    <div class="testimonials-track" id="testimonialTrack">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+  <div class="testimonials-nav">
+    <button onclick="moveTestimonials(-1)">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <button onclick="moveTestimonials(1)">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2L10 7L5 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- ══ STATS BANNER ══ -->
+<section id="stats">
+  <div class="stats-grid">
+    <div class="reveal">
+      <div class="stat-num" data-target="2400" data-suffix="+">0</div>
+      <div class="stat-label">Verified Rooms</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="stat-num" data-target="48" data-suffix="">0</div>
+      <div class="stat-label">Cities Covered</div>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="stat-num" data-target="0" data-prefix="₹" data-suffix=" Brokerage">₹0</div>
+      <div class="stat-label">Zero Brokerage</div>
+    </div>
+    <div class="reveal reveal-delay-3">
+      <div class="stat-num" data-target="49" data-prefix="" data-decimal="4." data-suffix="★">0</div>
+      <div class="stat-label">Average Rating</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ AI CHAT ══ -->
+<div id="chat-orb">
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+      <div class="chat-header-top">
+        <div class="chat-title-wrap">
+          <div class="chat-avatar">✦</div>
+          <div>
+            <div class="chat-title">NestIQ AI</div>
+            <div class="chat-subtitle">Powered by Claude</div>
+          </div>
+        </div>
+        <button class="chat-close" onclick="closeChat()">×</button>
+      </div>
+      <div class="chat-thinking">
+        <span style="font-size:11px;color:var(--text-muted);margin-right:6px">Thinking</span>
+        <div class="thinking-dot"></div>
+        <div class="thinking-dot"></div>
+        <div class="thinking-dot"></div>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg-wrap">
+        <div class="msg-avatar">✦</div>
+        <div class="msg-bubble ai">Hi! I'm your NestIQ AI concierge. Tell me about your lifestyle, budget, and preferred location — I'll find your perfect room. ✨</div>
+      </div>
+    </div>
+    <div class="chat-chips" id="chatChips">
+      <span class="chat-chip" onclick="sendChipMessage(this, 'Find rooms under ₹15k in Bandra')">Find rooms under ₹15k in Bandra</span>
+      <span class="chat-chip" onclick="sendChipMessage(this, 'I need a pet-friendly room with parking')">🐾 Pet-friendly with parking</span>
+      <span class="chat-chip" onclick="sendChipMessage(this, 'What is included in all-inclusive rent?')">All-inclusive rent explained</span>
+      <span class="chat-chip" onclick="sendChipMessage(this, 'Show co-living spaces for remote workers')">Co-living for remote work</span>
+    </div>
+    <div class="chat-input-wrap">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Ask about rooms, areas, pricing..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <button class="chat-send" onclick="sendMessage()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M1 7L13 1L9 7L13 13L1 7Z" stroke="#0A0A0F" stroke-width="1.5" fill="#0A0A0F"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <button class="chat-float-btn" onclick="toggleChat()">
+    <div class="chat-orb-dot"></div>
+    <span>✦ AI Agent</span>
+  </button>
+</div>
+
+<!-- ══ MODAL ══ -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-gallery">
+      <img id="modalMainImg" src="" alt="" class="modal-main-img">
+      <div class="modal-thumbs" id="modalThumbs"></div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-info" id="modalInfo"></div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <a href="#" class="footer-brand-logo">
+        <svg width="22" height="22" viewBox="0 0 22 22"><polygon points="11,1 13.5,8 21,8 15,13 17.5,20 11,16 4.5,20 7,13 1,8 8.5,8" fill="#D4A853"/></svg>
+        NestIQ
+      </a>
+      <p class="footer-tagline">AI-powered room rentals for the way you actually live. No brokerage. No guesswork.</p>
+      <div class="footer-social">
+        <a class="social-btn" href="#">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        </a>
+        <a class="social-btn" href="#">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a class="social-btn" href="#">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">Explore</div>
+      <ul class="footer-links">
+        <li><a href="#">Browse Rooms</a></li>
+        <li><a href="#">Co-living Spaces</a></li>
+        <li><a href="#">PG Accommodations</a></li>
+        <li><a href="#">Furnished Studios</a></li>
+        <li><a href="#">Short-term Stays</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Company</div>
+      <ul class="footer-links">
+        <li><a href="#">About NestIQ</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Press</a></li>
+        <li><a href="#">List Your Property</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Support</div>
+      <ul class="footer-links">
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Talk to AI Agent</a></li>
+        <li><a href="#">Safety Tips</a></li>
+        <li><a href="#">Report a Listing</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Legal</div>
+      <ul class="footer-links">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Cookie Policy</a></li>
+        <li><a href="#">Refund Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-newsletter reveal">
+    <div>
+      <div class="newsletter-text">Get AI-curated room drops weekly</div>
+      <div class="newsletter-sub">Personalized picks delivered to your inbox. Unsubscribe anytime.</div>
+    </div>
+    <div class="newsletter-form">
+      <input type="email" class="newsletter-input" placeholder="your@email.com">
+      <button class="newsletter-btn">Subscribe</button>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2025 NestIQ Technologies Pvt. Ltd. All rights reserved.</div>
+    <div class="footer-ai-badge">
+      Built with ✦ AI
+    </div>
+  </div>
+</footer>
+
+<script>
+// ══ DATA ══
+const listings = [
+  {
+    id: 1,
+    name: "Sunlit Studio in Bandra West",
+    location: "Bandra West, Mumbai",
+    price: "₹18,500",
+    match: 96,
+    rating: 5,
+    tags: ["WiFi", "AC", "Furnished", "Parking"],
+    imgs: [
+      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
+      "https://images.unsplash.com/photo-1565182999561-18d7dc61c393?w=800&q=80",
+      "https://images.unsplash.com/photo-1560448075-bb485b067938?w=800&q=80"
+    ],
+    landlord: { name: "Priya Menon", img: "https://images.unsplash.com/photo-1494790108755-2616b332a2b9?w=100&q=80" },
+    ai_summary: "Quiet tree-lined street, symmetric 200mbps fibre, 6 min walk to Bandra station. Ideal for a remote worker who values focused days and vibrant evenings.",
+    address: "14B, Hill Road, Bandra West, Mumbai 400050",
+    price_full: "₹18,500/mo"
+  },
+  {
+    id: 2,
+    name: "Minimalist Loft, Koramangala",
+    location: "Koramangala, Bangalore",
+    price: "₹14,000",
+    match: 91,
+    rating: 4,
+    tags: ["WiFi", "AC", "Desk"],
+    imgs: [
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80",
+      "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800&q=80",
+      "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80"
+    ],
+    landlord: { name: "Rahul Shetty", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80" },
+    ai_summary: "Steps from the Koramangala café belt — perfect for startup culture. Great natural light, soundproofed windows, and a rooftop lounge shared with like-minded professionals.",
+    address: "7th Block, 80 Feet Road, Koramangala, Bangalore 560034",
+    price_full: "₹14,000/mo"
+  },
+  {
+    id: 3,
+    name: "Heritage Room, Hauz Khas",
+    location: "Hauz Khas, New Delhi",
+    price: "₹12,500",
+    match: 88,
+    rating: 5,
+    tags: ["Furnished", "WiFi", "Rooftop"],
+    imgs: [
+      "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80",
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80",
+      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80"
+    ],
+    landlord: { name: "Kavita Sharma", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80" },
+    ai_summary: "A charming heritage building in Hauz Khas Village — artistic community, gallery hops, and the deer park nearby. A rare find for creatives seeking character over chrome.",
+    address: "Hauz Khas Village, New Delhi 110016",
+    price_full: "₹12,500/mo"
+  },
+  {
+    id: 4,
+    name: "Co-living Suite, Powai",
+    location: "Powai, Mumbai",
+    price: "₹11,200",
+    match: 93,
+    rating: 4,
+    tags: ["AC", "WiFi", "Gym", "All-inclusive"],
+    imgs: [
+      "https://images.unsplash.com/photo-1560448075-bb485b067938?w=800&q=80",
+      "https://images.unsplash.com/photo-1565182999561-18d7dc61c393?w=800&q=80",
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80"
+    ],
+    landlord: { name: "Amit Kulkarni", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80" },
+    ai_summary: "Lakeside co-living with a curated community of tech professionals. All bills, gym, and weekly housekeeping included. Close to Hiranandani and IIT Bombay.",
+    address: "Hiranandani Gardens, Powai, Mumbai 400076",
+    price_full: "₹11,200/mo"
+  },
+  {
+    id: 5,
+    name: "Artist's Flat, Alkapuri",
+    location: "Alkapuri, Vadodara",
+    price: "₹8,500",
+    match: 87,
+    rating: 5,
+    tags: ["WiFi", "Furnished", "Pet-friendly"],
+    imgs: [
+      "https://images.unsplash.com/photo-1565182999561-18d7dc61c393?w=800&q=80",
+      "https://images.unsplash.com/photo-1560448075-bb485b067938?w=800&q=80",
+      "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80"
+    ],
+    landlord: { name: "Zara Patel", img: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&q=80" },
+    ai_summary: "High ceilings, north-facing light, and a pet-loving building society. Your cat will love the quiet courtyard. Two blocks from the famous Alkapuri promenade.",
+    address: "Race Course Road, Alkapuri, Vadodara 390007",
+    price_full: "₹8,500/mo"
+  },
+  {
+    id: 6,
+    name: "Balcony Studio, Jubilee Hills",
+    location: "Jubilee Hills, Hyderabad",
+    price: "₹16,000",
+    match: 90,
+    rating: 5,
+    tags: ["AC", "Parking", "WiFi", "Furnished"],
+    imgs: [
+      "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800&q=80",
+      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
+      "https://images.unsplash.com/photo-1565182999561-18d7dc61c393?w=800&q=80"
+    ],
+    landlord: { name: "Vikram Reddy", img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80" },
+    ai_summary: "Premium studio with a wrap-around balcony and city views. Walking distance to Jubilee Hills Check Post, top restaurants, and the film nagar creative district.",
+    address: "Road No. 36, Jubilee Hills, Hyderabad 500033",
+    price_full: "₹16,000/mo"
+  }
+];
+
+const testimonials = [
+  { name: "Ananya Krishnan", city: "Mumbai", quote: "I told the AI I needed a quiet desk space near a metro with no brokerage. It found me a room in 6 minutes. I moved in the following Monday.", rating: 5, match: 94, img: "https://images.unsplash.com/photo-1494790108755-2616b332a2b9?w=200&q=80" },
+  { name: "Rohan Mehta", city: "Bangalore", quote: "The match score is insanely accurate. My 92% match room was actually perfect — it's like NestIQ knew I needed a rooftop before I did.", rating: 5, match: 92, img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" },
+  { name: "Siddhi Patel", city: "Pune", quote: "As a solo female professional, finding a safe, verified room was always stressful. NestIQ's female-only filter and verified listings changed everything.", rating: 5, match: 97, img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80" },
+  { name: "Karan Malhotra", city: "Delhi", quote: "Zero brokerage is not a gimmick — I saved ₹35,000 on my last move. The AI concierge even helped me negotiate my lease. Remarkable product.", rating: 5, match: 89, img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80" },
+  { name: "Preethi Nair", city: "Hyderabad", quote: "I moved three times in two years before NestIQ. I haven't moved since — that says everything about how well it matched me to my current room.", rating: 5, match: 98, img: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&q=80" }
+];
+
+const tagIcons = { WiFi: "📶", AC: "❄️", Furnished: "🛋️", Parking: "🚗", Desk: "💻", Rooftop: "🌇", Gym: "🏋️", "All-inclusive": "💡", "Pet-friendly": "🐾" };
+
+const starSvg = (filled) => `<svg viewBox="0 0 12 12" fill="${filled ? '#D4A853' : 'none'}" stroke="#D4A853" stroke-width="1"><polygon points="6,1 7.5,4.5 11,5 8.5,7.5 9,11 6,9.5 3,11 3.5,7.5 1,5 4.5,4.5"/></svg>`;
+
+function renderStars(n) {
+  return Array.from({length: 5}, (_, i) => starSvg(i < n)).join('');
+}
+
+// ══ RENDER LISTINGS ══
+function renderListings(data) {
+  const grid = document.getElementById('listingsGrid');
+  grid.innerHTML = data.map((l, i) => `
+    <div class="listing-card reveal reveal-delay-${(i % 5) + 1}" onclick="openModal(${l.id})">
+      <img class="listing-img" src="${l.imgs[0]}" alt="${l.name}" loading="lazy">
+      <div class="listing-overlay"></div>
+      <div class="listing-price">${l.price}/mo</div>
+      <div class="listing-info">
+        <div class="listing-name">${l.name}</div>
+        <div class="listing-loc">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="5" cy="4" r="2"/><path d="M5 9C5 9 1.5 6 1.5 4a3.5 3.5 0 017 0C8.5 6 5 9 5 9z"/></svg>
+          ${l.location}
+        </div>
+        <div class="listing-stars">${renderStars(l.rating)}</div>
+        <div class="listing-match">✦ ${l.match}% match for you</div>
+        <div class="listing-tags">
+          ${l.tags.map(t => `<span class="listing-tag">${tagIcons[t] || ''} ${t}</span>`).join('')}
+        </div>
+      </div>
+      <button class="listing-cta">View Room →</button>
+    </div>
+  `).join('');
+  observeReveal();
+}
+
+renderListings(listings);
+
+// ══ RENDER TESTIMONIALS ══
+const track = document.getElementById('testimonialTrack');
+track.innerHTML = testimonials.map(t => `
+  <div class="testimonial-card">
+    <div class="testimonial-header">
+      <img class="testimonial-avatar" src="${t.img}" alt="${t.name}" loading="lazy">
+      <div>
+        <div class="testimonial-name">${t.name}</div>
+        <div class="testimonial-city">${t.city}</div>
+      </div>
+    </div>
+    <div class="testimonial-stars">${renderStars(t.rating)}</div>
+    <div class="testimonial-quote">"${t.quote}"</div>
+    <span class="testimonial-match">✦ ${t.match}% AI Match</span>
+  </div>
+`).join('');
+
+let testimonialIdx = 0;
+let testimonialPaused = false;
+const trackEl = document.getElementById('testimonialTrack');
+trackEl.addEventListener('mouseenter', () => testimonialPaused = true);
+trackEl.addEventListener('mouseleave', () => testimonialPaused = false);
+
+function moveTestimonials(dir) {
+  testimonialIdx = Math.max(0, Math.min(testimonials.length - 2, testimonialIdx + dir));
+  trackEl.style.transform = `translateX(-${testimonialIdx * (360 + 24)}px)`;
+}
+setInterval(() => {
+  if (!testimonialPaused) {
+    testimonialIdx = (testimonialIdx + 1) % (testimonials.length - 1);
+    trackEl.style.transform = `translateX(-${testimonialIdx * (360 + 24)}px)`;
+  }
+}, 4000);
+
+// ══ MODAL ══
+function openModal(id) {
+  const l = listings.find(x => x.id === id);
+  if (!l) return;
+  document.getElementById('modalMainImg').src = l.imgs[0];
+  document.getElementById('modalThumbs').innerHTML = l.imgs.map((img, i) => `
+    <img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${img}" onclick="switchImg(this, '${img}')">
+  `).join('');
+  document.getElementById('modalInfo').innerHTML = `
+    <div>
+      <div class="modal-name">${l.name}</div>
+      <div class="modal-addr">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#D4A853" stroke-width="1.2"><circle cx="6" cy="5" r="2.2"/><path d="M6 11C6 11 2 7.5 2 5a4 4 0 018 0C10 7.5 6 11 6 11z"/></svg>
+        ${l.address}
+      </div>
+    </div>
+    <div class="modal-price-row">
+      <div class="modal-price">${l.price_full}</div>
+      <span class="modal-avail">Available Now</span>
+    </div>
+    <div>
+      <div class="amenities-title" style="margin-bottom:12px">Amenities</div>
+      <div class="amenities-grid">
+        ${l.tags.map(t => `<div class="amenity"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#D4A853" stroke-width="1.2"><path d="M2 7l4 4 6-6"/></svg>${t}</div>`).join('')}
+        <div class="amenity"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#D4A853" stroke-width="1.2"><path d="M2 7l4 4 6-6"/></svg>Hot Water</div>
+        <div class="amenity"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#D4A853" stroke-width="1.2"><path d="M2 7l4 4 6-6"/></svg>Security</div>
+        <div class="amenity"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#D4A853" stroke-width="1.2"><path d="M2 7l4 4 6-6"/></svg>Power Backup</div>
+      </div>
+    </div>
+    <div class="landlord-card">
+      <img class="landlord-avatar" src="${l.landlord.img}" alt="${l.landlord.name}">
+      <div>
+        <div class="landlord-name">${l.landlord.name}</div>
+        <div class="landlord-status">Verified Landlord · Usually responds in 1h</div>
+      </div>
+    </div>
+    <div class="ai-summary">
+      <div class="ai-summary-label">✦ Why this matches you</div>
+      <div class="ai-summary-text">${l.ai_summary}</div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-primary">Book a Visit</button>
+      <button class="btn-modal-ghost">Message Landlord</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function switchImg(el, src) {
+  document.getElementById('modalMainImg').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('modalMainImg').src = src;
+    document.getElementById('modalMainImg').style.opacity = '1';
+  }, 200);
+  document.querySelectorAll('.modal-thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay') && !e.target.classList.contains('modal-close')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.getElementById('modal-overlay').classList.remove('open'); document.body.style.overflow = ''; } });
+
+// ══ CHAT ══
+let chatOpen = false;
+function toggleChat() { chatOpen ? closeChat() : openChat(); }
+function openChat() { chatOpen = true; document.getElementById('chatPanel').classList.add('open'); }
+function closeChat() { chatOpen = false; document.getElementById('chatPanel').classList.remove('open'); }
+
+const aiResponses = {
+  budget: "I found 12 rooms matching your budget in that area. Top pick: a furnished studio in Bandra West at ₹14,800/mo — 93% match for you. Includes WiFi, AC, and a dedicated work desk. Want to see photos?",
+  pet: "Great news — I've filtered pet-friendly rooms just for you! 8 verified options available, including a 2BHK in Powai and a ground-floor studio in Indiranagar, Bangalore. Both allow cats and small dogs. Shall I show details?",
+  inclusive: "All-inclusive rent covers electricity, water, WiFi, maintenance, and often housekeeping. Some NestIQ listings also include OTT subscriptions and meal plans! I can filter listings by what's included — just tell me your preference.",
+  coliving: "Co-living spaces are perfect for remote workers! I found 6 premium options with high-speed internet, community workspaces, and weekly networking events. Prices start at ₹9,500/mo all-inclusive. Interested in a specific city?",
+  default: "That's a great question! Based on what you've told me, I'm searching our database of 2,400+ verified rooms. Give me a moment to find your best matches with the highest compatibility scores. ✦"
+};
+
+function getAIResponse(msg) {
+  const m = msg.toLowerCase();
+  if (m.includes('budget') || m.includes('₹') || m.includes('under') || m.includes('bandra')) return aiResponses.budget;
+  if (m.includes('pet') || m.includes('dog') || m.includes('cat')) return aiResponses.pet;
+  if (m.includes('inclusive') || m.includes('included') || m.includes('include')) return aiResponses.inclusive;
+  if (m.includes('co-living') || m.includes('coliving') || m.includes('remote')) return aiResponses.coliving;
+  return aiResponses.default;
+}
+
+function addMessage(text, isUser) {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `msg-wrap ${isUser ? 'user' : ''}`;
+  div.innerHTML = `
+    <div class="msg-avatar">${isUser ? '👤' : '✦'}</div>
+    <div class="msg-bubble ${isUser ? 'user' : 'ai'}">${text}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg-wrap';
+  div.id = 'typingIndicator';
+  div.innerHTML = `<div class="msg-avatar">✦</div><div class="msg-bubble ai"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addMessage(text, true);
+  document.getElementById('chatChips').style.display = 'none';
+  showTyping();
+  setTimeout(() => {
+    document.getElementById('typingIndicator')?.remove();
+    addMessage(getAIResponse(text), false);
+  }, 1200);
+}
+
+function sendChipMessage(el, text) {
+  addMessage(text, true);
+  document.getElementById('chatChips').style.display = 'none';
+  showTyping();
+  setTimeout(() => {
+    document.getElementById('typingIndicator')?.remove();
+    addMessage(getAIResponse(text), false);
+  }, 1200);
+}
+
+// ══ SEARCH ══
+function runSearch(btn) {
+  const orig = btn.innerHTML;
+  btn.innerHTML = `<div style="width:14px;height:14px;border:2px solid rgba(10,10,15,0.4);border-top-color:var(--obsidian);border-radius:50%;animation:spin 0.8s linear infinite"></div> Searching...`;
+  btn.disabled = true;
+  const grid = document.getElementById('listingsGrid');
+  grid.innerHTML = Array.from({length: 6}, () => `<div class="skeleton-card"><div class="skeleton-shimmer"></div></div>`).join('');
+  setTimeout(() => {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    renderListings(listings);
+  }, 1400);
+}
+
+// ══ CURSOR ══
+const cursor = document.getElementById('cursor');
+let cx = 0, cy = 0, tx = 0, ty = 0;
+document.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+function animateCursor() {
+  cx += (tx - cx) * 0.15;
+  cy += (ty - cy) * 0.15;
+  cursor.style.left = cx + 'px';
+  cursor.style.top = cy + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+document.querySelectorAll('a, button, .chip, .chat-chip, .listing-card, .step-card, .testimonial-card, .modal-thumb, .social-btn').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('big'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('big'));
+});
+
+// ══ NAVBAR SCROLL ══
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 80);
+  // parallax hero
+  const heroBg = document.getElementById('heroBg');
+  if (heroBg) heroBg.style.transform = `scale(1.05) translateY(${window.scrollY * 0.25}px)`;
+});
+
+// ══ INTERSECTION OBSERVER ══
+function observeReveal() {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('visible'); obs.unobserve(entry.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+observeReveal();
+
+// ══ COUNT-UP ══
+const countObs = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const el = entry.target;
+    const target = parseInt(el.dataset.target);
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    if (target === 0) { el.textContent = prefix + '0' + suffix; return; }
+    const start = Date.now();
+    const dur = 2000;
+    function tick() {
+      const p = Math.min(1, (Date.now() - start) / dur);
+      const val = Math.floor(p * target);
+      el.textContent = prefix + (target === 49 ? '4.' + Math.floor(p * 9) : val.toLocaleString('en-IN')) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = prefix + (target === 49 ? '4.9' : target.toLocaleString('en-IN')) + suffix;
+    }
+    tick();
+    countObs.unobserve(el);
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-target]').forEach(el => countObs.observe(el));
+</script>
+</body>
+</html>
